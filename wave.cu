@@ -80,10 +80,11 @@ void init_line(void)
       oldval[i] = values[i];
 }
 
+
 /**********************************************************************
- *      Calculate new values using wave equation
+ *     Update all values along line a specified number of times
  *********************************************************************/
-void do_math(int i)
+void update(int ns, int tp, float ov[], float val[], float nv[])
 {
    float dtime, c, dx, tau, sqtau;
 
@@ -92,25 +93,14 @@ void do_math(int i)
    dx = 1.0;
    tau = (c * dtime / dx);
    sqtau = tau * tau;
-   newval[i] = (2.0 * values[i]) - oldval[i] + (sqtau *  (-2.0)*values[i]);
-}
 
-/**********************************************************************
- *     Update all values along line a specified number of times
- *********************************************************************/
-void update(int ns, int tp, float ov[], float val[], float nv[])
-{
    int i, j;
 
-   /* Update values for each time step */
    for (i = 1; i<= nsteps; i++) {
-      /* Update points along line for this time step */
       for (j = 2; j <= tpoints-1; j++) {
-         /* global endpoints */
-         do_math(j);
+	   newval[i] = (2.0 * values[i]) - oldval[i] + (sqtau *  (-2.0)*values[i]);
       }
 
-      /* Update old values with new values */
       for (j = 2; j <= tpoints-1; j++) {
          oldval[j] = values[j];
          values[j] = newval[j];
