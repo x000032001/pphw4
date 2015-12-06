@@ -84,7 +84,7 @@ void init_line(void)
 /**********************************************************************
  *     Update all values along line a specified number of times
  *********************************************************************/
-__global__ void update(int ns, int tp, float ov[], float val[], float nv[])
+__global__ void update(int ns, float ov[], float val[], float nv[])
 {
    float dtime, c, dx, tau, sqtau;
 
@@ -95,7 +95,7 @@ __global__ void update(int ns, int tp, float ov[], float val[], float nv[])
    sqtau = tau * tau;
 
    int i;
-   int j = threadIdx.x + 2; // start from 0 , so offset to 2
+   int j = threadIdx.x+1; // start from 0 , so offset to 2
 
    for (i = 1; i<= ns; i++) {
 	 nv[j] = (2.0 * val[j]) - ov[j] + (sqtau *  (-2.0)*val[j]);
@@ -130,7 +130,18 @@ int main(int argc, char *argv[])
 	init_line();
 	printf("Updating all points for all time steps...\n");
 
-	update<<<1,tpoints-2>>>(nsteps ,tpoints ,oldval, values, newval);
+	float *old, *now, *newv;
+	cudaMalloc( (void **)&old, sizeof(float)*(MAXPOINTS+2) );
+	cudaMalloc( (void **)&now, sizeof(float)*(MAXPOINTS+2) );
+	cudaMalloc( (void **)&newv, sizeof(float)*(MAXPOINTS+2) );
+	
+	cudaMemcpy( old, oldval, sizeof(float)*(MAXPOINTS+2), cudaMemcpyHostToDevice );
+	cudaMemcpy( now, values, sizeof(float)*(MAXPOINTS+2), cudaMemcpyHostToDevice );
+	cudaMemcpy( newv, newval, sizeof(float)*(MAXPOINTS+2), cudaMemcpyHostToDevice );
+
+	update<<<1,tpoints>>>(nsteps ,old, now, newv);
+
+	cudaMemcpy( values, now, sizeof(float)*(MAXPOINTS+2), cudaMemcpyDeviceToHost );
 
 	printf("Printing final results...\n");
 	printfinal();
