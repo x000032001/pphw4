@@ -84,7 +84,7 @@ void init_line(void)
 /**********************************************************************
  *     Update all values along line a specified number of times
  *********************************************************************/
-void update(int ns, int tp, float ov[], float val[], float nv[])
+__global__ void update(int ns, int tp, float ov[], float val[], float nv[])
 {
    float dtime, c, dx, tau, sqtau;
 
@@ -94,17 +94,13 @@ void update(int ns, int tp, float ov[], float val[], float nv[])
    tau = (c * dtime / dx);
    sqtau = tau * tau;
 
-   int i, j;
+   int i;
+   int j = threadIdx.x + 2; // start from 0 , so offset to 2
 
-   for (i = 1; i<= nsteps; i++) {
-      for (j = 2; j <= tpoints-1; j++) {
-	   newval[j] = (2.0 * values[j]) - oldval[j] + (sqtau *  (-2.0)*values[j]);
-      }
-
-      for (j = 2; j <= tpoints-1; j++) {
-         oldval[j] = values[j];
-         values[j] = newval[j];
-      }
+   for (i = 1; i<= ns; i++) {
+	 nv[j] = (2.0 * val[j]) - ov[j] + (sqtau *  (-2.0)*val[j]);
+         ov[j] = val[j];
+         val[j] = nv[j];
    }
 }
 
@@ -133,7 +129,9 @@ int main(int argc, char *argv[])
 	printf("Initializing points on the line...\n");
 	init_line();
 	printf("Updating all points for all time steps...\n");
-	update(nsteps ,tpoints ,oldval, values, newval);
+
+	update<<<1,tpoints-2>>>(nsteps ,tpoints ,oldval, values, newval);
+
 	printf("Printing final results...\n");
 	printfinal();
 	printf("\nDone.\n\n");
