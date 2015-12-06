@@ -98,7 +98,7 @@ void update(int ns, int tp, float ov[], float val[], float nv[])
 
    for (i = 1; i<= nsteps; i++) {
       for (j = 2; j <= tpoints-1; j++) {
-	   newval[i] = (2.0 * values[i]) - oldval[i] + (sqtau *  (-2.0)*values[i]);
+	   newval[j] = (2.0 * values[j]) - oldval[j] + (sqtau *  (-2.0)*values[j]);
       }
 
       for (j = 2; j <= tpoints-1; j++) {
